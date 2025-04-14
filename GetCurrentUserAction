@@ -1,0 +1,34 @@
+// v1.1 - Fixed: Added dummy field to support InvocableMethod input
+// We have the the EmptyInput class to include a non-required dummy variable, to satisfy the @InvocableMethod requirement. @InvocableMethod methods must accept a list of Apex classes with @InvocableVariable fields.
+//You cannot pass an empty input class without at least one annotated field.
+
+global with sharing class GetCurrentUserAction {
+
+    @InvocableMethod(label='Get Current User')
+    global static List<UserResult> getUser(List<DummyInput> input) {
+        User current = [
+            SELECT Id, FirstName, LastName, Email
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+
+        return new List<UserResult>{
+            new UserResult(current)
+        };
+    }
+
+    global class DummyInput {
+        @InvocableVariable
+        public String dummyField; // Not used — just here to make Salesforce happy
+    }
+
+    global class UserResult {
+        @InvocableVariable
+        public User user;
+
+        public UserResult(User u) {
+            this.user = u;
+        }
+    }
+}
