@@ -1,0 +1,69 @@
+// v1.0 - Adds a CaseComment to an existing Case for a specific Contact
+
+global with sharing class AddCommentToCase {
+
+    @InvocableMethod(label='Add Case Comment')
+    global static List<CommentResponse> addComments(List<CommentRequest> requests) {
+        List<CommentResponse> responses = new List<CommentResponse>();
+
+        for (CommentRequest req : requests) {
+            if (req.caseId == null || req.contactId == null || String.isBlank(req.commentBody)) {
+                responses.add(new CommentResponse('Error: caseId, contactId, and commentBody are required.'));
+                continue;
+            }
+
+            try {
+                // Confirm the Case belongs to the Contact
+                List<Case> matchingCases = [
+                    SELECT Id, ContactId
+                    FROM Case
+                    WHERE Id = :req.caseId AND ContactId = :req.contactId
+                    LIMIT 1
+                ];
+
+                if (matchingCases.isEmpty()) {
+                    responses.add(new CommentResponse('Error: No case found matching that ID and contact.'));
+                    continue;
+                }
+
+                // Create the CaseComment
+                CaseComment comment = new CaseComment(
+                    ParentId = req.caseId,
+                    CommentBody = req.commentBody,
+                    IsPublished = true // Make it visible in portals if needed
+                );
+
+                insert comment;
+
+                responses.add(new CommentResponse('Comment added successfully to Case ID: ' + req.caseId));
+
+            } catch (Exception e) {
+                responses.add(new CommentResponse('Error adding comment: ' + e.getMessage()));
+            }
+        }
+
+        return responses;
+    }
+
+    // Inputs from Agentforce
+    global class CommentRequest {
+        @InvocableVariable(required=true)
+        global Id caseId;
+
+        @InvocableVariable(required=true)
+        global Id contactId;
+
+        @InvocableVariable(required=true)
+        global String commentBody;
+    }
+
+    // Output to Copilot
+    global class CommentResponse {
+        @InvocableVariable
+        global String message;
+
+        public CommentResponse(String message) {
+            this.message = message;
+        }
+    }
+}
