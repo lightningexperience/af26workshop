@@ -1,0 +1,73 @@
+// Create apex class for prompt template 
+// This Apex class gathers a list of open opportunities that are owned by the currently logged-in sales rep. For each opportunity, it pulls key details like the deal name, stage, amount, close date, next step, and who owns the deal. It also checks when the last activity (like a completed task) happened and estimates how long the opportunity has been sitting in its current stage. All this information is packaged together and sent into the prompt so the AI can analyze the pipeline and generate a personalized game plan for the rep.
+
+// We are using "Days in Stage" using LastModifiedDate. Even though Opportunity.StageLastModifiedDate is not directly queryable, we can use the standard LastModifiedDate as a proxy for when the stage was last changed. It's not perfect, but for testing/AI prompting, it's good enough unless audit precision is required.
+
+// Output variable is Prompt with an uppercase P ← this is key  - even though apex is not case sensitive.
+
+// When creating the Flex prompt template, Prompt Template → Inputs must be called  sales_user so that Prompt Builder binds data correctly - otherwise the  apex class will not show up in Prompt Builder.
+
+// ***************************
+public with sharing class PersonalizedOpportunities {
+
+    @InvocableMethod(label='Generate Opportunity Plan')
+    public static List<Response> generateOpportunityPlan(List<Request> requests) {
+        User sales_user = requests[0].sales_user;
+
+        List<Opportunity> rawOpps = [
+            SELECT Id, Name, StageName, Amount, CloseDate, NextStep, LastModifiedDate, Owner.Name,
+                (SELECT ActivityDate FROM Tasks WHERE Status = 'Completed' ORDER BY ActivityDate DESC LIMIT 1)
+            FROM Opportunity
+            WHERE OwnerId = :sales_user.Id
+            AND IsClosed = false
+            ORDER BY CloseDate ASC
+        ];
+
+        List<OpportunityWrapper> wrappedOpps = new List<OpportunityWrapper>();
+
+        for (Opportunity o : rawOpps) {
+            OpportunityWrapper w = new OpportunityWrapper();
+            w.Id = o.Id;
+            w.Name = o.Name;
+            w.StageName = o.StageName;
+            w.Amount = o.Amount;
+            w.CloseDate = o.CloseDate;
+            w.NextStep = o.NextStep;
+            w.OwnerName = o.Owner.Name;
+            w.DaysInStage = Date.today().daysBetween(o.LastModifiedDate.date());
+
+            if (!o.Tasks.isEmpty()) {
+                w.LastActivityDate = o.Tasks[0].ActivityDate;
+            }
+
+            wrappedOpps.add(w);
+        }
+
+        Response res = new Response();
+        res.Prompt = JSON.serialize(wrappedOpps);
+        return new List<Response>{ res };
+    }
+
+    public class OpportunityWrapper {
+        public Id Id;
+        public String Name;
+        public String StageName;
+        public Decimal Amount;
+        public Date CloseDate;
+        public String NextStep;
+        public String OwnerName;
+        public Date LastActivityDate;
+        public Integer DaysInStage;
+    }
+
+    public class Request {
+        @InvocableVariable(required=true)
+        public User sales_user;
+    }
+
+    public class Response {
+        @InvocableVariable
+        public String Prompt;
+    }
+}
+// ***************************
