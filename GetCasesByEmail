@@ -1,0 +1,59 @@
+// v1.0 - Returns case list for a contact identified by email
+
+global with sharing class GetCasesByEmail {
+
+    @InvocableMethod(label='Get Cases by Email')
+    global static List<CaseResult> getCases(List<EmailInput> inputList) {
+        String email = inputList[0].email;
+
+        // Lookup contact by email
+        List<Contact> contacts = [
+            SELECT Id
+            FROM Contact
+            WHERE Email = :email
+            LIMIT 1
+        ];
+
+        if (contacts.isEmpty()) {
+            return new List<CaseResult>{
+                new CaseResult('No contact found with that email.')
+            };
+        }
+
+        Id contactId = contacts[0].Id;
+
+        // Fetch related cases
+        List<Case> cases = [
+            SELECT Id, CaseNumber, Subject, Status, Priority, CreatedDate
+            FROM Case
+            WHERE ContactId = :contactId
+            ORDER BY CreatedDate DESC
+        ];
+
+        if (cases.isEmpty()) {
+            return new List<CaseResult>{
+                new CaseResult('No cases found for this contact.')
+            };
+        }
+
+        return new List<CaseResult>{
+            new CaseResult(JSON.serialize(cases))
+        };
+    }
+
+    // Input wrapper
+    global class EmailInput {
+        @InvocableVariable(required=true)
+        global String email;
+    }
+
+    // Output wrapper
+    global class CaseResult {
+        @InvocableVariable
+        global String caseData;
+
+        public CaseResult(String data) {
+            this.caseData = data;
+        }
+    }
+}
