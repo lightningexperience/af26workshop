@@ -1,0 +1,46 @@
+// v1.0 - Returns Contact Id based on email address
+
+global with sharing class GetContactIdByEmail {
+
+    @InvocableMethod(label='Get Contact Id by Email')
+    global static List<ContactResult> getContactId(List<EmailInput> inputs) {
+        String email = inputs[0].email;
+
+        List<Contact> matches = [
+            SELECT Id
+            FROM Contact
+            WHERE Email = :email
+            LIMIT 1
+        ];
+
+        if (matches.isEmpty()) {
+            return new List<ContactResult>{
+                new ContactResult(null, 'No contact found with that email.')
+            };
+        }
+
+        return new List<ContactResult>{
+            new ContactResult(matches[0].Id, null)
+        };
+    }
+
+    // Input class
+    global class EmailInput {
+        @InvocableVariable(required=true)
+        global String email;
+    }
+
+    // Output class
+    global class ContactResult {
+        @InvocableVariable
+        global Id contactId;
+
+        @InvocableVariable
+        global String message;
+
+        public ContactResult(Id contactId, String message) {
+            this.contactId = contactId;
+            this.message = message;
+        }
+    }
+}
