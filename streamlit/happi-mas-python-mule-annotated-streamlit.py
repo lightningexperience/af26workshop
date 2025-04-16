@@ -1,6 +1,6 @@
 # happi-mas-python-mule-annotated-streamlit.py
 # Streamlit GUI for Multi-Agent System (Mule-powered CustomAgent & Agentforce integration)
-
+# The 4 properties have been extracted out and will need to be entered into Streamlit separately.
 # Think of "import" like grabbing a toolkit. 
 # These toolkits let us do things like send messages to the internet (requests), build a web app (streamlit),
 # generate random IDs (uuid), and work with structured text (JSON).
