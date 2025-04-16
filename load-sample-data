@@ -1,0 +1,44 @@
+// Load data in the org for tasks and additional opportunities for the current user
+
+// Inserts data  using only standard fields and objects
+
+User rep = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
+
+List<Opportunity> opps = new List<Opportunity>{
+    new Opportunity(
+        Name = 'Acme Expansion Deal',
+        StageName = 'Proposal/Price Quote',
+        CloseDate = Date.today().addDays(15),
+        Amount = 120000,
+        OwnerId = rep.Id,
+        NextStep = 'Schedule pricing call'
+    ),
+    new Opportunity(
+        Name = 'BrightPath Renewal',
+        StageName = 'Negotiation/Review',
+        CloseDate = Date.today().addDays(30),
+        Amount = 85000,
+        OwnerId = rep.Id,
+        NextStep = 'Follow up with legal'
+    )
+};
+insert opps;
+
+// Add recent tasks to simulate last activity
+List<Task> tasks = new List<Task>{
+    new Task(
+        Subject = 'Follow-up Call',
+        ActivityDate = Date.today().addDays(-2),
+        WhatId = opps[0].Id,
+        OwnerId = rep.Id,
+        Status = 'Completed'
+    ),
+    new Task(
+        Subject = 'Proposal Review Meeting',
+        ActivityDate = Date.today().addDays(-5),
+        WhatId = opps[1].Id,
+        OwnerId = rep.Id,
+        Status = 'Completed'
+    )
+};
+insert tasks;
