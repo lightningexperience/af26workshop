@@ -1,5 +1,5 @@
-# happi-mas-python-mule-annotated.py
-#  Streamlit GUI for Multi-Agent System (Mule-powered CustomAgent & Agentforce integration)
+# happi-mas-python-mule-annotated-streamlit.py
+# Streamlit GUI for Multi-Agent System (Mule-powered CustomAgent & Agentforce integration)
 
 # Think of "import" like grabbing a toolkit. 
 # These toolkits let us do things like send messages to the internet (requests), build a web app (streamlit),
@@ -11,10 +11,11 @@ import json
 
 # These are web addresses where we send our chat questions or support queries.
 # Mule LLM answers general questions. The other three are for talking to Salesforce Agentforce support.
-MULE_AICHAIN_URL = "https://aichainexchangev2-hqmfw4.5sc6y6-2.usa-e2.cloudhub.io/api/prompt"
-AGENTFORCE_START_URL = "https://muleagentforceconnector-hqmfw4.5sc6y6-4.usa-e2.cloudhub.io/start"
-AGENTFORCE_CONTINUE_URL = "https://muleagentforceconnector-hqmfw4.5sc6y6-4.usa-e2.cloudhub.io/continue"
-AGENTFORCE_END_URL = "https://muleagentforceconnector-hqmfw4.5sc6y6-4.usa-e2.cloudhub.io/end"
+# We've now moved them to st.secrets so they can be injected securely via Streamlit Cloud.
+MULE_AICHAIN_URL = st.secrets["MULE_AICHAIN_URL"]
+AGENTFORCE_START_URL = st.secrets["AGENTFORCE_START_URL"]
+AGENTFORCE_CONTINUE_URL = st.secrets["AGENTFORCE_CONTINUE_URL"]
+AGENTFORCE_END_URL = st.secrets["AGENTFORCE_END_URL"]
 
 # This is a list of words. If a user types one of these, it means they want support.
 # We'll then switch them over to the Agentforce specialist bot.
@@ -89,7 +90,6 @@ def end_agentforce_session(session_id):
 # -----------------------------------
 # Now comes the *main function*. This is where everything comes together.
 # Think of this as the "director" that tells all the other functions when to run.
-
 def main():
     print("[INFO] Starting Streamlit multi-agent app...")
 
