@@ -10,7 +10,7 @@ import uuid
 import json
 
 # These are web addresses where we send our chat questions or support queries.
-# Mule LLM answers general questions. The other three are for talking to Salesforce Agentforce support.
+# LLM powered by Mule answers general questions. The other three are for talking to Salesforce Agentforce support.
 # We've now moved them to st.secrets so they can be injected securely via Streamlit Cloud.
 MULE_AICHAIN_URL = st.secrets["MULE_AICHAIN_URL"]
 AGENTFORCE_START_URL = st.secrets["AGENTFORCE_START_URL"]
@@ -44,7 +44,7 @@ with st.sidebar:
 # -----------------------------------
 # A function in Python is a reusable block of code. 
 # "def" stands for define. So we're *defining* a function here.
-# This one sends the user's question to the Mule LLM chatbot and returns the reply.
+# This one sends the user's question to the LLM chatbot via Mule  and returns the reply.
 def chat_with_customagent(user_input):
     try:
         res = requests.post(MULE_AICHAIN_URL, json={"prompt": user_input})
